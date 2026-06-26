@@ -281,7 +281,22 @@ function parseFrontmatter(content) {
 function buildMarkdown(data, content) {
   const lines = ["---"];
   for (const [k, v] of Object.entries(data)) {
-    if (v !== undefined && v !== "") lines.push(`${k}: "${v}"`);
+    if (v === undefined || v === "") continue;
+    // 多行文本字段用 YAML 块语法
+    if (typeof v === "string" && v.includes("\n")) {
+      lines.push(`${k}: |`);
+      v.split("\n").forEach(line => lines.push(`  ${line}`));
+    } else if (Array.isArray(v)) {
+      lines.push(`${k}: [${v.map(x => `"${x}"`).join(", ")}]`);
+    } else {
+      // 单行值：包含特殊字符时用引号包裹并转义
+      const sv = String(v);
+      if (sv.includes('"') || sv.includes(':') || sv.includes('#') || sv.includes("'")) {
+        lines.push(`${k}: "${sv.replace(/"/g, '\\"')}"`);
+      } else {
+        lines.push(`${k}: "${sv}"`);
+      }
+    }
   }
   lines.push("---");
   lines.push("");
@@ -381,20 +396,15 @@ async function saveArticle(isEdit, filePath) {
     summaryZh: g("f-summaryZh"), summaryEn: g("f-summaryEn"),
     status: g("f-status"), type: g("f-type"),
     coverImage: g("f-coverImage"),
+    bodyEn: g("f-bodyEn"),   // 英文正文存入 frontmatter
   };
 
-  const type = g("f-type") === "interest" ? "interest" : "life";
   const path = `content/articles/${slug}.md`;
-  // For interest type articles, store in a subfolder or just use prefix
   const md = buildMarkdown(frontmatter, g("f-bodyZh"));
-  // Also store English body as a separate field in frontmatter for now
-  // Actually, let's add bodyEn to frontmatter
-  const finalFrontmatter = { ...frontmatter, bodyEn: g("f-bodyEn") };
-  const fullMd = buildMarkdown(finalFrontmatter, g("f-bodyZh"));
 
   try {
-    await api("POST", "", { path, content: fullMd, message: `${isEdit?'✏️':'📝'} ${isEdit?'更新':'创建'}文章：${g("f-titleZh")}` });
-    toast("✅ 保存成功！", "success");
+    await api("POST", "", { path, content: md, message: `${isEdit?'✏️':'📝'} ${isEdit?'更新':'创建'}文章：${g("f-titleZh")}` });
+    toast("✅ 保存成功！1-2分钟后在网站可见", "success");
     location.hash = "articles";
   } catch(e) { toast("保存失败：" + e.message, "error"); }
 }
