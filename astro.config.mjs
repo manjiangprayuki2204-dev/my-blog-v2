@@ -3,7 +3,7 @@ import sitemap from "@astrojs/sitemap";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://xiaoman.vercel.app",
+  site: "https://my-blog-v2-alpha.vercel.app",
   integrations: [sitemap()],
   i18n: {
     defaultLocale: "zh",
