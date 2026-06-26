@@ -1,0 +1,58 @@
+---
+/**
+ * 中文作品集页 — 类别筛选 + 网格布局
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import WorkCard from "../../../components/WorkCard.astro";
+import TagFilter from "../../../components/TagFilter.astro";
+import { getTranslations } from "../../../i18n/index";
+import type { Lang } from "../../../i18n/index";
+import { getWorkPreviews, sortWorksByDate, filterWorksByCategory } from "../../../services/works";
+import type { WorkCategory } from "../../../domain/work";
+
+const lang: Lang = "zh";
+const t = getTranslations(lang);
+
+// 读取 URL 中的 category 参数
+const activeCategory = (Astro.url.searchParams.get("category") || "all") as
+  | WorkCategory
+  | "all";
+
+const categoryLabels = ["全部", "设计", "文字", "其他"];
+
+// 加载所有作品
+const allWorkEntries = await Astro.glob("content/works/*.md");
+const works = allWorkEntries.map((entry: any) => entry.frontmatter);
+const publishedWorks = sortWorksByDate(getWorkPreviews(works, lang));
+const filteredWorks = filterWorksByCategory(publishedWorks, activeCategory);
+---
+
+<BaseLayout title={t.works.title}>
+  <div class="blog-list-header">
+    <h1 class="blog-list-title">{t.works.title}</h1>
+    <div class="blog-filter-bar">
+      <TagFilter tags={categoryLabels} activeTag={
+        activeCategory === "all" ? "全部"
+        : activeCategory === "design" ? "设计"
+        : activeCategory === "writing" ? "文字"
+        : "其他"
+      } lang={lang} />
+    </div>
+  </div>
+
+  <div class="container">
+    {
+      filteredWorks.length > 0 ? (
+        <div class="works-grid" style="padding-bottom:64px;">
+          {filteredWorks.map((work) => (
+            <WorkCard work={work} lang={lang} />
+          ))}
+        </div>
+      ) : (
+        <p class="text-center" style="color:var(--color-text-secondary);padding:48px;">
+          还没有作品，在后台添加第一个吧 ✨
+        </p>
+      )
+    }
+  </div>
+</BaseLayout>

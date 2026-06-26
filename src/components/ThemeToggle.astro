@@ -1,0 +1,82 @@
+---
+/**
+ * 主题切换按钮 — 浅色/深色模式
+ */
+const { lang = "zh" } = Astro.props as { lang?: "zh" | "en" };
+---
+
+<button
+  class="nav-icon-btn theme-toggle"
+  id="theme-toggle"
+  type="button"
+  aria-label={lang === "zh" ? "切换深色/浅色模式" : "Toggle dark/light mode"}
+  title={lang === "zh" ? "切换主题" : "Toggle theme"}
+>
+  <span class="theme-icon-light">☀️</span>
+  <span class="theme-icon-dark">🌙</span>
+</button>
+
+<style>
+  [data-theme="dark"] .theme-icon-light {
+    display: none;
+  }
+  [data-theme="dark"] .theme-icon-dark {
+    display: inline;
+  }
+  .theme-icon-dark {
+    display: none;
+  }
+  .theme-icon-light {
+    display: inline;
+  }
+</style>
+
+<script>
+  function applyTheme() {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else if (saved === "light") {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      // 跟随系统偏好
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+      if (prefersDark) {
+        document.documentElement.setAttribute("data-theme", "dark");
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+      }
+    }
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute("data-theme");
+    if (current === "dark") {
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.setItem("theme", "light");
+    } else {
+      document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("theme", "dark");
+    }
+  }
+
+  // 立即应用主题，避免页面闪烁
+  applyTheme();
+
+  // 绑定按钮点击事件
+  const btn = document.getElementById("theme-toggle");
+  if (btn) {
+    btn.addEventListener("click", toggleTheme);
+  }
+
+  // 监听系统主题变化
+  window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", () => {
+      if (!localStorage.getItem("theme")) {
+        applyTheme();
+      }
+    });
+</script>

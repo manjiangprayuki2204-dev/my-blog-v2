@@ -1,0 +1,151 @@
+---
+/**
+ * 搜索弹窗 — 全屏遮罩，从顶部滑出，集成 Pagefind
+ * 点击导航栏搜索图标或按 Ctrl+K 打开
+ */
+import type { Lang } from "../i18n/index";
+import { getTranslations } from "../i18n/index";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props as Props;
+const t = getTranslations(lang);
+---
+
+<div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label={t.nav.search}>
+  <div class="search-dialog">
+    <div class="search-input-wrap">
+      <span>🔍</span>
+      <input
+        type="text"
+        id="search-input"
+        placeholder={t.search.placeholder}
+        autocomplete="off"
+      />
+      <button
+        class="nav-icon-btn"
+        id="search-close"
+        type="button"
+        aria-label={t.search.close}
+        style="font-size:18px;"
+      >
+        ✕
+      </button>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="search-empty" id="search-placeholder">
+        {lang === "zh" ? "输入关键词开始搜索…" : "Type to start searching…"}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function initSearch() {
+    const overlay = document.getElementById("search-overlay")!;
+    const input = document.getElementById("search-input") as HTMLInputElement;
+    const results = document.getElementById("search-results")!;
+    const placeholder = document.getElementById("search-placeholder")!;
+
+    function openSearch() {
+      overlay.classList.add("open");
+      input.focus();
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeSearch() {
+      overlay.classList.remove("open");
+      input.value = "";
+      results.innerHTML = "";
+      results.appendChild(placeholder);
+      placeholder.style.display = "";
+      document.body.style.overflow = "";
+    }
+
+    // 通过按钮打开
+    document.getElementById("search-btn")?.addEventListener("click", openSearch);
+    document.getElementById("mobile-search-btn")?.addEventListener("click", openSearch);
+    document.getElementById("search-close")?.addEventListener("click", closeSearch);
+
+    // 点击遮罩关闭
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeSearch();
+    });
+
+    // ESC 关闭
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlay.classList.contains("open")) {
+        closeSearch();
+      }
+      // Ctrl+K 打开
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        openSearch();
+      }
+    });
+
+    // Pagefind 搜索（需要在生产构建后才有索引）
+    async function doSearch(query: string) {
+      if (!query.trim()) {
+        results.innerHTML = "";
+        results.appendChild(placeholder);
+        placeholder.style.display = "";
+        return;
+      }
+
+      placeholder.style.display = "none";
+
+      try {
+        // @ts-expect-error — Pagefind 在构建后注入到 window
+        const pagefind = window.pagefind;
+        if (!pagefind) {
+          results.innerHTML = `<div class="search-empty">${
+            lang === "zh"
+              ? "搜索功能需在生产构建后使用（npm run build && npm run preview）"
+              : "Search is available after production build (npm run build && npm run preview)"
+          }</div>`;
+          return;
+        }
+
+        const search = await pagefind.search(query, {
+          // 只搜当前语言的文章
+          filters: { language: lang },
+        });
+
+        if (!search.results.length) {
+          results.innerHTML = `<div class="search-empty">${"zh" === lang ? "没有找到相关内容" : "No results found"}</div>`;
+          return;
+        }
+
+        const html = await Promise.all(
+          search.results.slice(0, 10).map(async (r: any) => {
+            const data = await r.data();
+            return `
+              <a href="${data.url}" class="search-result-item">
+                <div class="search-result-title">${data.meta?.title || data.url}</div>
+                <div class="search-result-excerpt">${data.excerpt || ""}</div>
+              </a>
+            `;
+          }),
+        );
+
+        results.innerHTML = html.join("");
+      } catch {
+        results.innerHTML = `<div class="search-empty">${
+          lang === "zh"
+            ? "搜索功能需在生产构建后使用"
+            : "Search available after build"
+        }</div>`;
+      }
+    }
+
+    // 防抖搜索
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    input.addEventListener("input", () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => doSearch(input.value), 300);
+    });
+  })();
+</script>

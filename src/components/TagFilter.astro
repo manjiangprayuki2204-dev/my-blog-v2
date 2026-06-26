@@ -1,0 +1,32 @@
+---
+/**
+ * 标签筛选栏 — 横向可滑动，不换行不截断
+ */
+import type { Lang } from "../i18n/index";
+
+interface Props {
+  tags: string[];
+  activeTag: string;
+  lang: Lang;
+}
+
+const { tags, activeTag = "全部", lang } = Astro.props as Props;
+
+// 获取当前页面基础 URL（去掉已有的 tag 参数）
+const baseUrl = Astro.url.pathname;
+---
+
+<div class="tag-group" role="group" aria-label={lang === "zh" ? "标签筛选" : "Filter by tag"}>
+  {tags.map((tag) => {
+    const isActive = tag === activeTag;
+    return (
+      <a
+        href={isActive ? baseUrl : `${baseUrl}?tag=${encodeURIComponent(tag)}`}
+        class={`tag ${isActive ? "active" : ""}`}
+        data-tag={tag}
+      >
+        {tag}
+      </a>
+    );
+  })}
+</div>

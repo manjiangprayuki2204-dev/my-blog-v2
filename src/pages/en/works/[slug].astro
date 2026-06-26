@@ -1,0 +1,69 @@
+---
+/**
+ * English Work Detail Page
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getTranslations } from "../../../i18n/index";
+import type { Lang } from "../../../i18n/index";
+import { WORK_CATEGORY_LABELS_EN } from "../../../domain/work";
+import type { Work } from "../../../domain/work";
+
+const { slug } = Astro.params;
+const lang: Lang = "en";
+const t = getTranslations(lang);
+
+export async function getStaticPaths() {
+  const entries = await Astro.glob("content/works/*.md");
+  const slugs = entries
+    .map((entry: any) => entry.frontmatter.slug)
+    .filter(Boolean);
+  return slugs.map((s: string) => ({ params: { slug: s } }));
+}
+
+const allWorkEntries = await Astro.glob("content/works/*.md");
+const currentEntry = allWorkEntries.find((entry: any) => entry.frontmatter.slug === slug);
+
+if (!currentEntry) {
+  return Astro.redirect(`/${lang}/works/`);
+}
+
+const work: Work = (currentEntry as any).frontmatter;
+const Content = (currentEntry as any).Content;
+const categoryLabel = WORK_CATEGORY_LABELS_EN[work.category];
+---
+
+<BaseLayout title={work.titleEn}>
+  <article>
+    <div class="work-detail-header">
+      <div class="content-container">
+        <span class="tag" style="margin-bottom:16px;">{categoryLabel}</span>
+        <h1 class="article-title">{work.titleEn}</h1>
+        <div class="article-meta">
+          <span>{work.date}</span>
+        </div>
+      </div>
+    </div>
+
+    {work.images && work.images.length > 0 && (
+      <div class="content-container">
+        <div class="work-image-gallery">
+          {work.images.map((img) => (
+            <img src={img} alt={work.titleEn} loading="lazy" />
+          ))}
+        </div>
+      </div>
+    )}
+
+    <div class="content-container">
+      <div class="article-content">
+        <Content />
+      </div>
+    </div>
+
+    <div class="content-container text-center" style="padding:32px 0 64px;">
+      <a href={`/${lang}/works/`} class="btn btn-outline">
+        ← {t.works.title}
+      </a>
+    </div>
+  </article>
+</BaseLayout>

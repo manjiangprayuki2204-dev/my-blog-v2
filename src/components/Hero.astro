@@ -1,0 +1,39 @@
+---
+/**
+ * Hero 区域 — 头像 + 昵称 + 一句话介绍 + CTA 按钮
+ */
+import type { Lang } from "../i18n/index";
+import { getTranslations } from "../i18n/index";
+import type { Profile } from "../domain/profile";
+import { DEFAULT_PROFILE } from "../domain/profile";
+
+interface Props {
+  profile?: Profile;
+}
+
+const lang = (Astro.params.lang || "zh") as Lang;
+const t = getTranslations(lang);
+const profile = (Astro.props as Props).profile || DEFAULT_PROFILE;
+const intro = lang === "zh" ? profile.introZh : profile.introEn;
+---
+
+<section class="hero">
+  <img
+    class="hero-avatar"
+    src={profile.avatar}
+    alt={profile.nickname}
+    width="120"
+    height="120"
+    loading="eager"
+  />
+  <h1 class="hero-title">{profile.nickname}</h1>
+  <p class="hero-subtitle">{intro}</p>
+  <div class="hero-actions">
+    <a href={`/${lang}/blog/`} class="btn btn-primary">
+      {t.hero.readPosts}
+    </a>
+    <a href={`/${lang}/about/`} class="btn btn-outline">
+      {t.hero.aboutMe}
+    </a>
+  </div>
+</section>

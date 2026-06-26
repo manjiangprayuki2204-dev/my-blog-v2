@@ -1,0 +1,111 @@
+---
+/**
+ * 全局布局 — 所有页面共用
+ * 包含：导航栏、自定义光标、阅读进度条、回到顶部、页脚
+ */
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import CustomCursor from "../components/CustomCursor.astro";
+import BackToTop from "../components/BackToTop.astro";
+import SearchDialog from "../components/SearchDialog.astro";
+import "../styles/global.css";
+import type { Lang } from "../i18n/index";
+import { getTranslations } from "../i18n/index";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** 是否显示阅读进度条（仅文章详情页） */
+  showProgressBar?: boolean;
+  ogImage?: string;
+}
+
+const lang = (Astro.params.lang || "zh") as Lang;
+const t = getTranslations(lang);
+
+const {
+  title,
+  description = lang === "zh"
+    ? "用文字和镜头记录生活的温柔角落"
+    : "Capturing life's gentle moments through words and lens",
+  showProgressBar = false,
+  ogImage = "/images/og-default.jpg",
+} = Astro.props as Props;
+
+const fullTitle = title ? `${title} — ${t.siteTitle}` : t.siteTitle;
+---
+
+<!doctype html>
+<html lang={lang === "zh" ? "zh-CN" : "en"}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="author" content="小漫 / Xiaoman" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content={t.siteTitle} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>{fullTitle}</title>
+  </head>
+  <body>
+    <!-- 自定义光标 -->
+    <CustomCursor />
+
+    <!-- 导航栏 -->
+    <Nav />
+
+    <!-- 阅读进度条 -->
+    {showProgressBar && <slot name="progress" />}
+
+    <!-- 搜索弹窗 -->
+    <SearchDialog lang={lang} />
+
+    <!-- 页面主体 -->
+    <main>
+      <slot />
+    </main>
+
+    <!-- 回到顶部 -->
+    <BackToTop />
+
+    <!-- 页脚 -->
+    <Footer />
+
+    <!-- Giscus 主题跟随 -->
+    <script>
+      // 监听主题变化，更新 Giscus
+      const observer = new MutationObserver(() => {
+        const theme =
+          document.documentElement.getAttribute("data-theme") === "dark"
+            ? "dark"
+            : "light";
+        // 通知 Giscus iframe
+        const giscusFrame = document.querySelector(
+          "iframe.giscus-frame",
+        ) as HTMLIFrameElement | null;
+        if (giscusFrame?.contentWindow) {
+          giscusFrame.contentWindow.postMessage(
+            {
+              giscus: {
+                setConfig: { theme: `https://giscus.app/themes/${theme === "dark" ? "dark" : "light"}.css` },
+              },
+            },
+            "https://giscus.app",
+          );
+        }
+      });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+      });
+    </script>
+  </body>
+</html>

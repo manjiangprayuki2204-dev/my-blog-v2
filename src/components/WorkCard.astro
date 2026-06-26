@@ -1,0 +1,41 @@
+---
+/**
+ * 作品卡片 — 封面图 + 作品名 + 描述 + 类别标签
+ */
+import type { WorkPreview } from "../domain/work";
+import type { Lang } from "../i18n/index";
+import { WORK_CATEGORY_LABELS_ZH, WORK_CATEGORY_LABELS_EN } from "../domain/work";
+
+interface Props {
+  work: WorkPreview;
+  lang: Lang;
+}
+
+const { work, lang } = Astro.props as Props;
+const categoryLabel =
+  lang === "zh"
+    ? WORK_CATEGORY_LABELS_ZH[work.category]
+    : WORK_CATEGORY_LABELS_EN[work.category];
+---
+
+<a
+  href={`/${lang}/works/${work.slug}/`}
+  class="card"
+  style="display:block;text-decoration:none;"
+>
+  <img
+    class="card-image"
+    src={work.coverImage}
+    alt={work.title}
+    loading="lazy"
+    width="600"
+    height="375"
+  />
+  <div class="card-body">
+    <div class="card-meta">
+      <span class="tag">{categoryLabel}</span>
+    </div>
+    <h3 class="card-title">{work.title}</h3>
+    <p class="card-summary">{work.description}</p>
+  </div>
+</a>

@@ -1,0 +1,117 @@
+---
+/**
+ * 中文文章详情页
+ * 阅读进度条 + 封面 + 正文 + 标签 + 评论 + 上一篇/下一篇
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import ReadingProgress from "../../../components/ReadingProgress.astro";
+import GiscusComments from "../../../components/GiscusComments.astro";
+import { getTranslations } from "../../../i18n/index";
+import type { Lang } from "../../../i18n/index";
+import { formatDate, getAdjacentArticles, getArticlePreviews, sortByDate } from "../../../services/articles";
+import type { Article } from "../../../domain/article";
+
+const { slug } = Astro.params;
+const lang: Lang = "zh";
+const t = getTranslations(lang);
+
+// getStaticPaths: 生成所有可能的 slug
+export async function getStaticPaths() {
+  const entries = await Astro.glob("content/articles/*.md");
+  const slugs = entries
+    .map((entry: any) => entry.frontmatter.slug)
+    .filter(Boolean);
+  return slugs.map((s: string) => ({ params: { slug: s } }));
+}
+
+// 加载所有文章，找到当前这篇
+const allArticleEntries = await Astro.glob("content/articles/*.md");
+const currentEntry = allArticleEntries.find((entry: any) => entry.frontmatter.slug === slug);
+
+if (!currentEntry) {
+  return Astro.redirect(`/${lang}/blog/`);
+}
+
+const article: Article = (currentEntry as any).frontmatter;
+
+// 在 Astro 5 中，Content 组件直接从 glob 条目获取
+const Content = (currentEntry as any).Content;
+
+// 获取相邻文章
+const allPreviews = sortByDate(
+  getArticlePreviews(
+    allArticleEntries.map((e: any) => e.frontmatter),
+    lang,
+  ),
+);
+const { prev, next } = getAdjacentArticles(allPreviews, slug);
+---
+
+<BaseLayout title={article.titleZh} description={article.summaryZh} showProgressBar>
+  <ReadingProgress slot="progress" />
+
+  <article>
+    <div class="article-header">
+      <div class="content-container">
+        <h1 class="article-title">{article.titleZh}</h1>
+        <div class="article-meta">
+          <span>{formatDate(article.date, lang)}</span>
+          <span>·</span>
+          <div class="tag-group" style="margin:0;">
+            {article.tags.map((tag) => <span class="tag">{tag}</span>)}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 封面图 -->
+    {article.coverImage && (
+      <div class="content-container" style="margin-bottom:32px;">
+        <img
+          class="article-cover"
+          src={article.coverImage}
+          alt={article.titleZh}
+          style="width:100%;max-height:480px;object-fit:cover;"
+        />
+      </div>
+    )}
+
+    <!-- 正文 -->
+    <div class="content-container">
+      <div class="article-content">
+        <Content />
+      </div>
+    </div>
+
+    <!-- 上一篇 / 下一篇 -->
+    <div class="content-container">
+      <div class="post-nav">
+        <div style="flex:1;">
+          {prev && (
+            <a href={`/${lang}/blog/${prev.slug}/`}>
+              <div class="post-nav-label">{t.blog.prevPost}</div>
+              <div class="post-nav-title">{prev.title}</div>
+            </a>
+          )}
+        </div>
+        <div style="flex:1;">
+          {next && (
+            <a
+              href={`/${lang}/blog/${next.slug}/`}
+              class="post-nav-next"
+              style="display:block;"
+            >
+              <div class="post-nav-label">{t.blog.nextPost}</div>
+              <div class="post-nav-title">{next.title}</div>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <!-- 评论 -->
+    <div class="content-container">
+      <GiscusComments lang={lang} />
+    </div>
+  </article>
+</BaseLayout>

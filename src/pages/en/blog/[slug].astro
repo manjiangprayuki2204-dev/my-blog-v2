@@ -1,0 +1,103 @@
+---
+/**
+ * English Article Detail Page
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import ReadingProgress from "../../../components/ReadingProgress.astro";
+import GiscusComments from "../../../components/GiscusComments.astro";
+import { getTranslations } from "../../../i18n/index";
+import type { Lang } from "../../../i18n/index";
+import { formatDate, getAdjacentArticles, getArticlePreviews, sortByDate } from "../../../services/articles";
+import type { Article } from "../../../domain/article";
+
+const { slug } = Astro.params;
+const lang: Lang = "en";
+const t = getTranslations(lang);
+
+export async function getStaticPaths() {
+  const entries = await Astro.glob("content/articles/*.md");
+  const slugs = entries
+    .map((entry: any) => entry.frontmatter.slug)
+    .filter(Boolean);
+  return slugs.map((s: string) => ({ params: { slug: s } }));
+}
+
+const allArticleEntries = await Astro.glob("content/articles/*.md");
+const currentEntry = allArticleEntries.find((entry: any) => entry.frontmatter.slug === slug);
+
+if (!currentEntry) {
+  return Astro.redirect(`/${lang}/blog/`);
+}
+
+const article: Article = (currentEntry as any).frontmatter;
+const Content = (currentEntry as any).Content;
+
+const allPreviews = sortByDate(
+  getArticlePreviews(
+    allArticleEntries.map((e: any) => e.frontmatter),
+    lang,
+  ),
+);
+const { prev, next } = getAdjacentArticles(allPreviews, slug);
+---
+
+<BaseLayout title={article.titleEn} description={article.summaryEn} showProgressBar>
+  <ReadingProgress slot="progress" />
+
+  <article>
+    <div class="article-header">
+      <div class="content-container">
+        <h1 class="article-title">{article.titleEn}</h1>
+        <div class="article-meta">
+          <span>{formatDate(article.date, lang)}</span>
+          <span>·</span>
+          <div class="tag-group" style="margin:0;">
+            {article.tags.map((tag) => <span class="tag">{tag}</span>)}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {article.coverImage && (
+      <div class="content-container" style="margin-bottom:32px;">
+        <img
+          class="article-cover"
+          src={article.coverImage}
+          alt={article.titleEn}
+          style="width:100%;max-height:480px;object-fit:cover;"
+        />
+      </div>
+    )}
+
+    <div class="content-container">
+      <div class="article-content">
+        <Content />
+      </div>
+    </div>
+
+    <div class="content-container">
+      <div class="post-nav">
+        <div style="flex:1;">
+          {prev && (
+            <a href={`/${lang}/blog/${prev.slug}/`}>
+              <div class="post-nav-label">{t.blog.prevPost}</div>
+              <div class="post-nav-title">{prev.title}</div>
+            </a>
+          )}
+        </div>
+        <div style="flex:1;">
+          {next && (
+            <a href={`/${lang}/blog/${next.slug}/`} class="post-nav-next" style="display:block;">
+              <div class="post-nav-label">{t.blog.nextPost}</div>
+              <div class="post-nav-title">{next.title}</div>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div class="content-container">
+      <GiscusComments lang={lang} />
+    </div>
+  </article>
+</BaseLayout>

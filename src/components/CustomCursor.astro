@@ -1,0 +1,72 @@
+---
+/**
+ * 自定义光标组件
+ * 粉色半透明泡沫光标，带缓动跟随效果
+ * 从旧项目提取并适配 Astro
+ */
+---
+
+<script>
+  // 直接获取 cursor DOM 元素
+  const cursorEl = document.querySelector('[data-cursor]') as HTMLDivElement;
+  if (!cursorEl) throw new Error('Cursor element not found');
+
+  let mouseX = -100;
+  let mouseY = -100;
+  let cursorX = -100;
+  let cursorY = -100;
+  let rafId: number;
+
+  // 检测是否为触屏设备
+  function isTouchDevice(): boolean {
+    return window.matchMedia("(pointer: coarse)").matches;
+  }
+
+  // 橡皮筋缓动跟随
+  function animate() {
+    cursorX += (mouseX - cursorX) * 0.16;
+    cursorY += (mouseY - cursorY) * 0.16;
+    cursorEl.style.left = `${cursorX}px`;
+    cursorEl.style.top = `${cursorY}px`;
+    rafId = requestAnimationFrame(animate);
+  }
+
+  function onMouseMove(e: MouseEvent) {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  }
+
+  function onMouseOver(e: MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (!target) return;
+    const interactive = target.closest(
+      "a, button, input, textarea, [role='button'], .clickable, .card, .tag, .btn",
+    );
+    if (interactive) cursorEl.classList.add("hover");
+  }
+
+  function onMouseOut(e: MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (!target) return;
+    const interactive = target.closest(
+      "a, button, input, textarea, [role='button'], .clickable, .card, .tag, .btn",
+    );
+    if (interactive) cursorEl.classList.remove("hover");
+  }
+
+  function onMouseDown() { cursorEl.classList.add("click"); }
+  function onMouseUp() { cursorEl.classList.remove("click"); }
+
+  // 初始化：触屏设备跳过
+  if (!isTouchDevice()) {
+    document.body.classList.add("custom-cursor-active");
+    document.addEventListener("mousemove", onMouseMove, { passive: true });
+    document.addEventListener("mouseover", onMouseOver);
+    document.addEventListener("mouseout", onMouseOut);
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mouseup", onMouseUp);
+    rafId = requestAnimationFrame(animate);
+  }
+</script>
+
+<div class="custom-cursor" data-cursor></div>

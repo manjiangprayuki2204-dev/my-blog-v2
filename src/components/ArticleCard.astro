@@ -1,0 +1,37 @@
+---
+/**
+ * 文章卡片 — 封面图 + 标题 + 日期 + 摘要 + 标签
+ */
+import type { ArticlePreview } from "../domain/article";
+import type { Lang } from "../i18n/index";
+import { formatDate } from "../services/articles";
+
+interface Props {
+  article: ArticlePreview;
+  lang: Lang;
+}
+
+const { article, lang } = Astro.props as Props;
+const formattedDate = formatDate(article.date, lang);
+---
+
+<a href={`/${lang}/blog/${article.slug}/`} class="card" style="display:block;text-decoration:none;">
+  <img
+    class="card-image"
+    src={article.coverImage}
+    alt={article.title}
+    loading="lazy"
+    width="600"
+    height="375"
+  />
+  <div class="card-body">
+    <div class="card-meta">
+      <span>{formattedDate}</span>
+    </div>
+    <h3 class="card-title">{article.title}</h3>
+    <p class="card-summary">{article.summary}</p>
+    <div class="tag-group" style="margin-top:12px;">
+      {article.tags.map((tag) => <span class="tag">{tag}</span>)}
+    </div>
+  </div>
+</a>

@@ -1,0 +1,70 @@
+---
+/**
+ * 中文"关于我"页 — 从个人资料读取
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getTranslations } from "../../i18n/index";
+import type { Lang } from "../../i18n/index";
+import { DEFAULT_PROFILE } from "../../domain/profile";
+
+const lang: Lang = "zh";
+const t = getTranslations(lang);
+
+// 尝试加载个人资料，若无则用默认值
+let profile = DEFAULT_PROFILE;
+try {
+  const profileEntries = await Astro.glob("content/profile/*.md");
+  if (profileEntries.length > 0) {
+    profile = { ...DEFAULT_PROFILE, ...(profileEntries[0] as any).frontmatter };
+  }
+} catch {
+  // 使用默认值
+}
+---
+
+<BaseLayout title={t.about.title}>
+  <div class="about-section">
+    <div class="content-container">
+      <img
+        class="about-avatar"
+        src={profile.avatar}
+        alt={profile.nickname}
+        width="140"
+        height="140"
+      />
+      <h1 class="about-name">{profile.nickname}</h1>
+      <p class="about-intro">{profile.introZh}</p>
+
+      <div class="about-social">
+        {profile.github && (
+          <a href={profile.github} target="_blank" rel="noopener noreferrer">
+            GitHub
+          </a>
+        )}
+        {profile.xiaohongshu && (
+          <a href={profile.xiaohongshu} target="_blank" rel="noopener noreferrer">
+            小红书
+          </a>
+        )}
+        {profile.weibo && (
+          <a href={profile.weibo} target="_blank" rel="noopener noreferrer">
+            微博
+          </a>
+        )}
+        {profile.email && (
+          <a href={`mailto:${profile.email}`}>
+            ✉ 邮箱
+          </a>
+        )}
+      </div>
+
+      {profile.bioZh && (
+        <div class="about-bio">
+          <div class="article-content">
+            <p>{profile.bioZh}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

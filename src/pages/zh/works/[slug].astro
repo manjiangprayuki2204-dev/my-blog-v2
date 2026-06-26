@@ -1,0 +1,73 @@
+---
+/**
+ * 中文作品详情页
+ * 作品信息 + 图片组 + 详细介绍
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getTranslations } from "../../../i18n/index";
+import type { Lang } from "../../../i18n/index";
+import { WORK_CATEGORY_LABELS_ZH } from "../../../domain/work";
+import type { Work } from "../../../domain/work";
+
+const { slug } = Astro.params;
+const lang: Lang = "zh";
+const t = getTranslations(lang);
+
+export async function getStaticPaths() {
+  const entries = await Astro.glob("content/works/*.md");
+  const slugs = entries
+    .map((entry: any) => entry.frontmatter.slug)
+    .filter(Boolean);
+  return slugs.map((s: string) => ({ params: { slug: s } }));
+}
+
+const allWorkEntries = await Astro.glob("content/works/*.md");
+const currentEntry = allWorkEntries.find((entry: any) => entry.frontmatter.slug === slug);
+
+if (!currentEntry) {
+  return Astro.redirect(`/${lang}/works/`);
+}
+
+const work: Work = (currentEntry as any).frontmatter;
+const Content = (currentEntry as any).Content;
+const categoryLabel = WORK_CATEGORY_LABELS_ZH[work.category];
+---
+
+<BaseLayout title={work.titleZh}>
+  <article>
+    <div class="work-detail-header">
+      <div class="content-container">
+        <span class="tag" style="margin-bottom:16px;">{categoryLabel}</span>
+        <h1 class="article-title">{work.titleZh}</h1>
+        <div class="article-meta">
+          <span>{work.date}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 图片组（左右滑动） -->
+    {work.images && work.images.length > 0 && (
+      <div class="content-container">
+        <div class="work-image-gallery">
+          {work.images.map((img) => (
+            <img src={img} alt={work.titleZh} loading="lazy" />
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- 详细介绍 -->
+    <div class="content-container">
+      <div class="article-content">
+        <Content />
+      </div>
+    </div>
+
+    <!-- 返回作品集 -->
+    <div class="content-container text-center" style="padding:32px 0 64px;">
+      <a href={`/${lang}/works/`} class="btn btn-outline">
+        ← {t.works.title}
+      </a>
+    </div>
+  </article>
+</BaseLayout>

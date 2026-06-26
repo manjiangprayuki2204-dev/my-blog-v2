@@ -1,0 +1,64 @@
+---
+/**
+ * 语言切换按钮 — 中文/English
+ */
+import { getAlternateUrl, type Lang } from "../i18n/index";
+
+const currentLang = (Astro.params.lang || "zh") as Lang;
+const targetLang: Lang = currentLang === "zh" ? "en" : "zh";
+const label = currentLang === "zh" ? "EN" : "中";
+const menuLabel = currentLang === "zh" ? "English" : "中文";
+---
+
+<div class="lang-dropdown">
+  <button
+    class="nav-icon-btn"
+    id="lang-toggle"
+    type="button"
+    aria-label="切换语言 / Switch language"
+    title="切换语言 / Switch language"
+  >
+    🌐 <span style="font-size:13px;margin-left:2px;">{label}</span>
+  </button>
+  <div class="lang-menu" id="lang-menu">
+    <a
+      class="lang-option"
+      href={getAlternateUrl(Astro.url.pathname, "zh")}
+      data-lang="zh"
+    >
+      中文
+    </a>
+    <a
+      class="lang-option"
+      href={getAlternateUrl(Astro.url.pathname, "en")}
+      data-lang="en"
+    >
+      English
+    </a>
+  </div>
+</div>
+
+<script>
+  const toggle = document.getElementById("lang-toggle");
+  const menu = document.getElementById("lang-menu");
+
+  if (toggle && menu) {
+    toggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.toggle("open");
+    });
+
+    document.addEventListener("click", () => {
+      menu.classList.remove("open");
+    });
+  }
+
+  // 高亮当前语言
+  const currentPath = window.location.pathname;
+  const lang = currentPath.startsWith("/en/") || currentPath === "/en"
+    ? "en"
+    : "zh";
+  menu?.querySelectorAll(".lang-option").forEach((el) => {
+    el.classList.toggle("active", el.getAttribute("data-lang") === lang);
+  });
+</script>

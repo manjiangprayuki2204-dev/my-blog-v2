@@ -1,0 +1,56 @@
+---
+/**
+ * English Works Page
+ */
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import WorkCard from "../../../components/WorkCard.astro";
+import TagFilter from "../../../components/TagFilter.astro";
+import { getTranslations } from "../../../i18n/index";
+import type { Lang } from "../../../i18n/index";
+import { getWorkPreviews, sortWorksByDate, filterWorksByCategory } from "../../../services/works";
+import type { WorkCategory } from "../../../domain/work";
+
+const lang: Lang = "en";
+const t = getTranslations(lang);
+
+const activeCategory = (Astro.url.searchParams.get("category") || "all") as
+  | WorkCategory
+  | "all";
+
+const categoryLabels = ["All", "Design", "Writing", "Other"];
+
+const allWorkEntries = await Astro.glob("content/works/*.md");
+const works = allWorkEntries.map((entry: any) => entry.frontmatter);
+const publishedWorks = sortWorksByDate(getWorkPreviews(works, lang));
+const filteredWorks = filterWorksByCategory(publishedWorks, activeCategory);
+---
+
+<BaseLayout title={t.works.title}>
+  <div class="blog-list-header">
+    <h1 class="blog-list-title">{t.works.title}</h1>
+    <div class="blog-filter-bar">
+      <TagFilter tags={categoryLabels} activeTag={
+        activeCategory === "all" ? "All"
+        : activeCategory === "design" ? "Design"
+        : activeCategory === "writing" ? "Writing"
+        : "Other"
+      } lang={lang} />
+    </div>
+  </div>
+
+  <div class="container">
+    {
+      filteredWorks.length > 0 ? (
+        <div class="works-grid" style="padding-bottom:64px;">
+          {filteredWorks.map((work) => (
+            <WorkCard work={work} lang={lang} />
+          ))}
+        </div>
+      ) : (
+        <p class="text-center" style="color:var(--color-text-secondary);padding:48px;">
+          No works yet. Add your first one ✨
+        </p>
+      )
+    }
+  </div>
+</BaseLayout>

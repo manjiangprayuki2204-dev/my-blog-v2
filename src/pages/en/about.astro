@@ -1,0 +1,69 @@
+---
+/**
+ * English About Page
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getTranslations } from "../../i18n/index";
+import type { Lang } from "../../i18n/index";
+import { DEFAULT_PROFILE } from "../../domain/profile";
+
+const lang: Lang = "en";
+const t = getTranslations(lang);
+
+let profile = DEFAULT_PROFILE;
+try {
+  const profileEntries = await Astro.glob("content/profile/*.md");
+  if (profileEntries.length > 0) {
+    profile = { ...DEFAULT_PROFILE, ...(profileEntries[0] as any).frontmatter };
+  }
+} catch {
+  // Use default
+}
+---
+
+<BaseLayout title={t.about.title}>
+  <div class="about-section">
+    <div class="content-container">
+      <img
+        class="about-avatar"
+        src={profile.avatar}
+        alt={profile.nickname}
+        width="140"
+        height="140"
+      />
+      <h1 class="about-name">{profile.nickname}</h1>
+      <p class="about-intro">{profile.introEn}</p>
+
+      <div class="about-social">
+        {profile.github && (
+          <a href={profile.github} target="_blank" rel="noopener noreferrer">
+            GitHub
+          </a>
+        )}
+        {profile.xiaohongshu && (
+          <a href={profile.xiaohongshu} target="_blank" rel="noopener noreferrer">
+            Xiaohongshu
+          </a>
+        )}
+        {profile.weibo && (
+          <a href={profile.weibo} target="_blank" rel="noopener noreferrer">
+            Weibo
+          </a>
+        )}
+        {profile.email && (
+          <a href={`mailto:${profile.email}`}>
+            ✉ Email
+          </a>
+        )}
+      </div>
+
+      {profile.bioEn && (
+        <div class="about-bio">
+          <div class="article-content">
+            <p>{profile.bioEn}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

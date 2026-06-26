@@ -1,0 +1,104 @@
+---
+/**
+ * 导航栏 — 毛玻璃固定顶部，含汉堡菜单（移动端）
+ */
+import LanguageToggle from "./LanguageToggle.astro";
+import ThemeToggle from "./ThemeToggle.astro";
+import type { Lang } from "../i18n/index";
+import { getTranslations } from "../i18n/index";
+
+const lang = (Astro.params.lang || "zh") as Lang;
+const t = getTranslations(lang);
+const currentPath = Astro.url.pathname;
+
+function isActive(path: string): string {
+  // 去掉语言前缀后匹配
+  const cleanPath = currentPath.replace(/^\/(zh|en)/, "") || "/";
+  return cleanPath === path || cleanPath.startsWith(path + "/") ? "active" : "";
+}
+---
+
+<nav class="navbar" role="navigation" aria-label={lang === "zh" ? "主导航" : "Main navigation"}>
+  <div class="navbar-inner">
+    <!-- Logo -->
+    <a href={`/${lang}/`} class="nav-logo">{t.siteTitle}</a>
+
+    <!-- 桌面端菜单 -->
+    <div class="nav-links">
+      <a href={`/${lang}/`} class={isActive("/")}>{t.nav.home}</a>
+      <a href={`/${lang}/blog/`} class={isActive("/blog")}>{t.nav.blog}</a>
+      <a href={`/${lang}/works/`} class={isActive("/works")}>{t.nav.works}</a>
+      <a href={`/${lang}/about/`} class={isActive("/about")}>{t.nav.about}</a>
+    </div>
+
+    <!-- 右侧控件 -->
+    <div class="nav-controls">
+      <!-- 搜索按钮 -->
+      <button
+        class="nav-icon-btn"
+        id="search-btn"
+        type="button"
+        aria-label={t.nav.search}
+        title={t.nav.search}
+      >
+        🔍
+      </button>
+
+      <!-- 语言切换 -->
+      <LanguageToggle lang={lang} />
+
+      <!-- 主题切换 -->
+      <ThemeToggle lang={lang} />
+    </div>
+
+    <!-- 汉堡菜单按钮（仅移动端可见） -->
+    <button
+      class="hamburger"
+      id="hamburger-btn"
+      type="button"
+      aria-label={lang === "zh" ? "打开菜单" : "Open menu"}
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- 移动端全屏菜单 -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href={`/${lang}/`} class={isActive("/")}>{t.nav.home}</a>
+  <a href={`/${lang}/blog/`} class={isActive("/blog")}>{t.nav.blog}</a>
+  <a href={`/${lang}/works/`} class={isActive("/works")}>{t.nav.works}</a>
+  <a href={`/${lang}/about/`} class={isActive("/about")}>{t.nav.about}</a>
+
+  <div class="mobile-menu-controls">
+    <button class="nav-icon-btn" id="mobile-search-btn" type="button">
+      🔍 {t.nav.search}
+    </button>
+    <LanguageToggle lang={lang} />
+    <ThemeToggle lang={lang} />
+  </div>
+</div>
+
+<script>
+  const hamburger = document.getElementById("hamburger-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  if (hamburger && mobileMenu) {
+    hamburger.addEventListener("click", () => {
+      const isOpen = mobileMenu.classList.toggle("open");
+      hamburger.classList.toggle("open", !!isOpen);
+      document.body.style.overflow = isOpen ? "hidden" : "";
+    });
+
+    // 点击菜单链接后关闭
+    mobileMenu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        mobileMenu.classList.remove("open");
+        hamburger.classList.remove("open");
+        document.body.style.overflow = "";
+      });
+    });
+  }
+</script>

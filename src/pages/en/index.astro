@@ -1,0 +1,92 @@
+---
+/**
+ * English Homepage
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import ArticleCard from "../../components/ArticleCard.astro";
+import WorkCard from "../../components/WorkCard.astro";
+import { getTranslations } from "../../i18n/index";
+import type { Lang } from "../../i18n/index";
+import { getArticlePreviews, sortByDate, getLatest } from "../../services/articles";
+import { getWorkPreviews, getFeaturedWorks } from "../../services/works";
+
+const lang: Lang = "en";
+const t = getTranslations(lang);
+
+const allArticleEntries = await Astro.glob("content/articles/*.md");
+const articles = allArticleEntries.map((entry: any) => entry.frontmatter);
+const publishedPreviews = sortByDate(getArticlePreviews(articles, lang));
+const latestPosts = getLatest(publishedPreviews, 3);
+
+const allWorkEntries = await Astro.glob("content/works/*.md");
+const works = allWorkEntries.map((entry: any) => entry.frontmatter);
+const publishedWorks = getWorkPreviews(works, lang);
+const featuredWorks = getFeaturedWorks(publishedWorks, 2);
+---
+
+<BaseLayout>
+  <Hero />
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">{t.home.latestPosts}</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      {
+        latestPosts.length > 0 ? (
+          <div class="article-grid">
+            {latestPosts.map((article) => (
+              <ArticleCard article={article} lang={lang} />
+            ))}
+          </div>
+        ) : (
+          <p class="text-center" style="color:var(--color-text-secondary);padding:32px;">
+            No posts yet. Create your first one in the admin panel 🌱
+          </p>
+        )
+      }
+
+      {publishedPreviews.length > 3 && (
+        <div class="text-center mt-4">
+          <a href={`/${lang}/blog/`} class="btn btn-outline">
+            {t.home.viewAll} →
+          </a>
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">{t.home.featuredWorks}</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      {
+        featuredWorks.length > 0 ? (
+          <div class="works-grid">
+            {featuredWorks.map((work) => (
+              <WorkCard work={work} lang={lang} />
+            ))}
+          </div>
+        ) : (
+          <p class="text-center" style="color:var(--color-text-secondary);padding:32px;">
+            No works yet. Add your first one ✨
+          </p>
+        )
+      }
+
+      {publishedWorks.length > 2 && (
+        <div class="text-center mt-4">
+          <a href={`/${lang}/works/`} class="btn btn-outline">
+            {t.home.viewAll} →
+          </a>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>
