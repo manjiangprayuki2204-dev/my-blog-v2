@@ -11,9 +11,19 @@ import { getTranslations } from "../../i18n/index";
 import type { Lang } from "../../i18n/index";
 import { getArticlePreviews, sortByDate, getLatest } from "../../services/articles";
 import { getWorkPreviews, getFeaturedWorks } from "../../services/works";
+import { DEFAULT_PROFILE } from "../../domain/profile";
 
 const lang: Lang = "zh";
 const t = getTranslations(lang);
+
+// ===== 加载个人资料 =====
+let profile = DEFAULT_PROFILE;
+try {
+  const profileEntries = await Astro.glob("content/profile/*.md");
+  if (profileEntries.length > 0) {
+    profile = { ...DEFAULT_PROFILE, ...(profileEntries[0] as any).frontmatter };
+  }
+} catch { /* 使用默认值 */ }
 
 // ===== 加载内容数据 =====
 // 使用 Astro.glob 加载所有 Markdown 内容
@@ -33,7 +43,7 @@ const featuredWorks = getFeaturedWorks(publishedWorks, 2);
 
 <BaseLayout>
   <!-- Hero 区域 -->
-  <Hero />
+  <Hero profile={profile} />
 
   <!-- 最新文章 -->
   <section class="section">
