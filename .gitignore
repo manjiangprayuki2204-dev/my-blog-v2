@@ -19,6 +19,7 @@ Thumbs.db
 
 # Tina CMS generated admin
 admin/
+public/admin/
 
 # Pagefind index
 public/pagefind/

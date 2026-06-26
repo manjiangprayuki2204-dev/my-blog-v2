@@ -18,7 +18,7 @@ export default defineConfig({
   branch: process.env.HEAD || "main",
 
   build: {
-    outputFolder: "admin",
+    outputFolder: "public/admin",
     publicFolder: "public",
   },
 
