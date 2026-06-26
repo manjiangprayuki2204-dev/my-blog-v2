@@ -17,10 +17,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Tina CMS generated admin
-admin/
-public/admin/
-
 # Pagefind index
 public/pagefind/
 
