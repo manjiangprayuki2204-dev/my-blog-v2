@@ -384,7 +384,7 @@ async function renderArticleForm(main, filePath) {
       <div class="form-group"><label>封面图</label>
         <div class="upload-row">
           <input id="f-coverImage" value="${esc(d.coverImage)}" placeholder="/images/xxx.jpg" style="flex:1">
-          <input type="file" id="cover-upload-input" accept="image/*" onchange="uploadImage('cover')">
+          <input type="file" id="cover-upload-input" accept="image/*" onchange="uploadImage('cover', 'coverImage')">
           <button type="button" class="btn btn-sm" onclick="document.getElementById('cover-upload-input').click()">📷 上传</button>
         </div>
         <div class="upload-status" id="cover-upload-status"></div>
@@ -485,7 +485,14 @@ async function renderWorkForm(main, filePath) {
         <div class="form-group"><label>类别</label><select id="f-category"><option value="design" ${d.category==='design'?'selected':''}>设计</option><option value="writing" ${d.category==='writing'?'selected':''}>文字</option><option value="other" ${d.category==='other'?'selected':''}>其他</option></select></div>
         <div class="form-group"><label>是否展示</label><select id="f-published"><option value="true" ${d.published==='true'?'selected':''}>展示</option><option value="false" ${d.published==='false'?'selected':''}>隐藏</option></select></div>
       </div>
-      <div class="form-group"><label>封面图</label><input id="f-coverImage" value="${esc(d.coverImage)}" placeholder="/images/xxx.jpg"></div>
+      <div class="form-group"><label>封面图</label>
+        <div class="upload-row">
+          <input id="f-coverImage" value="${esc(d.coverImage)}" placeholder="/images/xxx.jpg" style="flex:1">
+          <input type="file" id="work-cover-upload-input" accept="image/*" onchange="uploadImage('work-cover', 'coverImage')">
+          <button type="button" class="btn btn-sm" onclick="document.getElementById('work-cover-upload-input').click()">📷 上传</button>
+        </div>
+        <div class="upload-status" id="work-cover-upload-status"></div>
+      </div>
       <div class="form-group"><label>中文详细介绍 (Markdown)</label><textarea id="f-detailZh" style="min-height:250px;font-family:monospace;font-size:14px">${esc(existing.body)}</textarea></div>
       <div class="form-group"><label>英文详细介绍 (Markdown)</label><textarea id="f-detailEn" style="min-height:250px;font-family:monospace;font-size:14px">${esc(d.detailEn||'')}</textarea></div>
       <div style="display:flex;gap:12px;margin-top:8px">
@@ -534,7 +541,14 @@ async function renderProfileForm(main) {
       </div>
       <div class="form-group"><label>中文一句话介绍</label><input id="f-introZh" value="${esc(d.introZh)}"></div>
       <div class="form-group"><label>英文一句话介绍</label><input id="f-introEn" value="${esc(d.introEn)}"></div>
-      <div class="form-group"><label>头像路径</label><input id="f-avatar" value="${esc(d.avatar)}" placeholder="/images/avatar.jpg"></div>
+      <div class="form-group"><label>头像</label>
+        <div class="upload-row">
+          <input id="f-avatar" value="${esc(d.avatar)}" placeholder="/images/avatar.jpg" style="flex:1">
+          <input type="file" id="profile-avatar-upload-input" accept="image/*" onchange="uploadImage('profile-avatar', 'avatar')">
+          <button type="button" class="btn btn-sm" onclick="document.getElementById('profile-avatar-upload-input').click()">📷 上传</button>
+        </div>
+        <div class="upload-status" id="profile-avatar-upload-status"></div>
+      </div>
       <div class="form-group"><label>中文自我介绍 (Markdown)</label><textarea id="f-bioZh" style="min-height:180px;font-family:monospace;font-size:14px">${esc(existing.body)}</textarea></div>
       <div class="form-group"><label>英文自我介绍 (Markdown)</label><textarea id="f-bioEn" style="min-height:180px;font-family:monospace;font-size:14px">${esc(d.bioEn||'')}</textarea></div>
       <div class="form-row-3">
@@ -576,13 +590,13 @@ async function del(filePath) {
 }
 
 /* ═══════════════ IMAGE UPLOAD ═══════════════ */
-function uploadImage(type) {
-  const input = document.getElementById(`${type}-upload-input`);
-  const statusEl = document.getElementById(`${type}-upload-status`);
+function uploadImage(prefix, targetField) {
+  const input = document.getElementById(`${prefix}-upload-input`);
+  const statusEl = document.getElementById(`${prefix}-upload-status`);
+  if (!input || !statusEl) return;
   const file = input.files[0];
   if (!file) return;
 
-  // 10MB 限制
   if (file.size > 10 * 1024 * 1024) {
     statusEl.textContent = "图片不能超过 10MB";
     return;
@@ -600,7 +614,7 @@ function uploadImage(type) {
       });
       const result = await resp.json();
       if (result.ok) {
-        const pathInput = document.getElementById(`f-${type === 'cover' ? 'coverImage' : type}`);
+        const pathInput = document.getElementById(`f-${targetField}`);
         if (pathInput) pathInput.value = result.path;
         statusEl.textContent = `✅ 上传成功: ${result.path}`;
         statusEl.style.color = "#7ba890";
