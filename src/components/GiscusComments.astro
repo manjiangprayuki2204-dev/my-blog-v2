@@ -11,26 +11,24 @@ interface Props {
 
 const { lang } = Astro.props as Props;
 
-// Giscus 配置 — repo 信息从环境变量读取
+// Giscus 配置 — 从环境变量读取
 const giscusRepo = import.meta.env.PUBLIC_GISCUS_REPO || "manjiangprayuki2204-dev/my-blog-v2";
 const giscusRepoId = import.meta.env.PUBLIC_GISCUS_REPO_ID || "";
 const giscusCategory = import.meta.env.PUBLIC_GISCUS_CATEGORY || "Announcements";
 const giscusCategoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID || "";
 const giscusLang = lang === "zh" ? "zh-CN" : "en";
-const giscusTheme = "light"; // 初始主题，后续由 JS 动态更新
 ---
 
 <div class="giscus-wrapper" id="giscus-container">
   <h3 style="font-family:var(--font-heading);margin-bottom:24px;">
-    {lang === "zh" ? "评论" : "Comments"}
+    {lang === "zh" ? "💬 评论" : "💬 Comments"}
   </h3>
   <div id="giscus-loading" style="text-align:center;padding:32px;color:var(--color-text-secondary);">
     {lang === "zh" ? "评论加载中…" : "Loading comments…"}
   </div>
 </div>
 
-<script>
-  // 懒加载：使用 IntersectionObserver 在滚动到评论区时才加载 Giscus
+<script define:vars={{ giscusRepo, giscusRepoId, giscusCategory, giscusCategoryId, giscusLang }}>
   const container = document.getElementById("giscus-container");
   if (!container) throw new Error("Giscus container not found");
 
@@ -63,17 +61,17 @@ const giscusTheme = "light"; // 初始主题，后续由 JS 动态更新
 
     const script = document.createElement("script");
     script.src = "https://giscus.app/client.js";
-    script.setAttribute("data-repo", "{{ giscusRepo }}");
-    script.setAttribute("data-repo-id", "{{ giscusRepoId }}");
-    script.setAttribute("data-category", "{{ giscusCategory }}");
-    script.setAttribute("data-category-id", "{{ giscusCategoryId }}");
+    script.setAttribute("data-repo", giscusRepo);
+    script.setAttribute("data-repo-id", giscusRepoId);
+    script.setAttribute("data-category", giscusCategory);
+    script.setAttribute("data-category-id", giscusCategoryId);
     script.setAttribute("data-mapping", "pathname");
     script.setAttribute("data-strict", "0");
     script.setAttribute("data-reactions-enabled", "1");
     script.setAttribute("data-emit-metadata", "0");
     script.setAttribute("data-input-position", "bottom");
     script.setAttribute("data-theme", getCurrentTheme());
-    script.setAttribute("data-lang", "{{ giscusLang }}");
+    script.setAttribute("data-lang", giscusLang);
     script.setAttribute("data-loading", "lazy");
     script.setAttribute("crossorigin", "anonymous");
     script.async = true;
